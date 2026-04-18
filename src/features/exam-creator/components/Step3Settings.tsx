@@ -1,0 +1,252 @@
+import { useState, useEffect } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { Clock, Shuffle, ShieldCheck, Users, UserPlus, ChevronDown } from 'lucide-react';
+import { supabase } from '../../../services/supabase';
+import { ExamFormData } from '../types';
+import { StudentPickerModal } from './StudentPickerModal';
+import styles from '../ExamCreator.module.css';
+
+export function Step3Settings() {
+    const { register, watch, setValue, formState: { errors } } = useFormContext<ExamFormData>();
+    const [levels, setLevels] = useState<string[]>([]);
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+    const watchGroup = watch('target_group');
+    const watchStudentIds = watch('target_student_ids') || [];
+    const watchAllowReview = watch('allow_review');
+
+    useEffect(() => {
+        if (!watchAllowReview) {
+            setValue('show_correct_answers', false);
+        }
+    }, [watchAllowReview, setValue]);
+
+    useEffect(() => {
+        // Fetch unique levels for the dropdown
+        const fetchLevels = async () => {
+            const { data } = await supabase.from('profiles').select('level').not('level', 'is', null);
+            if (data) {
+                const unique = Array.from(new Set(data.map(d => d.level))).filter(Boolean) as string[];
+                setLevels(unique.sort());
+            }
+        };
+        fetchLevels();
+    }, []);
+
+    return (
+        <div className={styles.formArea}>
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 className={styles.title} style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>Exam Settings</h3>
+                <p className={styles.subtitle} style={{ margin: 0 }}>Configure time limits, passing requirements, and behavior.</p>
+            </div>
+
+            <div className={styles.formGrid}>
+
+                {/* Timing & Scheduling */}
+                <div className={styles.settingsCard}>
+                    <h4 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <Clock size={14} color="#818cf8" /> Timing & Scheduling
+                    </h4>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Start Time *</label>
+                        <input
+                            type="datetime-local"
+                            {...register('start_time')}
+                            className={`${styles.input} ${errors.start_time ? styles.inputError : ''}`}
+                        />
+                        {errors.start_time && <span className={styles.errorText}>{errors.start_time.message}</span>}
+                        {!errors.start_time && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>When students can start taking the exam.</span>}
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>End Time / Hard Deadline *</label>
+                        <input
+                            type="datetime-local"
+                            {...register('end_time')}
+                            className={`${styles.input} ${errors.end_time ? styles.inputError : ''}`}
+                        />
+                        {errors.end_time && <span className={styles.errorText}>{errors.end_time.message}</span>}
+                        {!errors.end_time && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Exam forcefully expires here regardless of student duration.</span>}
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Duration (in minutes) *</label>
+                        <input
+                            type="number"
+                            {...register('duration_minutes', { valueAsNumber: true })}
+                            className={styles.input}
+                            min="5"
+                        />
+                        {errors.duration_minutes && <span className={styles.errorText}>{errors.duration_minutes.message}</span>}
+                    </div>
+                </div>
+
+                {/* Grading & Behavior */}
+                <div className={styles.settingsCard}>
+                    <h4 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <ShieldCheck size={14} color="#34d399" /> Grading & Security
+                    </h4>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Passing Score (%) *</label>
+                        <input
+                            type="number"
+                            {...register('passing_score', { valueAsNumber: true })}
+                            className={styles.input}
+                            min="1" max="100"
+                        />
+                        {errors.passing_score && <span className={styles.errorText}>{errors.passing_score.message}</span>}
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Minimum percentage required to pass.</span>
+                    </div>
+
+                    <div style={{ marginTop: '1.5rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                        <div>
+                            <div style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <Shuffle size={14} color="#f59e0b" /> Randomize Questions
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
+                                Shuffle question order for each student
+                            </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input type="checkbox" {...register('is_randomized')} style={{ opacity: 0, width: 0, height: 0 }} />
+                                <div style={{ width: '40px', height: '24px', background: 'rgba(255,255,255,0.1)', borderRadius: '99px', transition: '0.3s', position: 'relative' }} className="toggle-bg">
+                                    <div style={{ position: 'absolute', top: '2px', left: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: '0.3s' }} className="toggle-dot" />
+                                </div>
+                            </div>
+                        </label>
+                        <style>{`
+                            input:checked + .toggle-bg { background: var(--primary) !important; }
+                            input:checked + .toggle-bg .toggle-dot { transform: translateX(16px); }
+                        `}</style>
+                    </div>
+
+                    {/* Allow Review Toggle */}
+                    <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                        <div>
+                            <div style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <ShieldCheck size={14} color="#60a5fa" /> Allow Review
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
+                                Let students revisit answers after exam
+                            </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input type="checkbox" {...register('allow_review')} style={{ opacity: 0, width: 0, height: 0 }} />
+                                <div style={{ width: '40px', height: '24px', background: 'rgba(255,255,255,0.1)', borderRadius: '99px', transition: '0.3s', position: 'relative' }} className="toggle-bg">
+                                    <div style={{ position: 'absolute', top: '2px', left: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: '0.3s' }} className="toggle-dot" />
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {/* Show Correct Answers Toggle */}
+                    <div style={{
+                        marginTop: '1rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+                        gap: '0.75rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px',
+                        opacity: watchAllowReview ? 1 : 0.5, pointerEvents: watchAllowReview ? 'auto' : 'none'
+                    }}>
+                        <div>
+                            <div style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <ShieldCheck size={14} color="#34d399" /> Show Answers
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
+                                Reveal correct answers in review
+                            </div>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <div style={{ position: 'relative' }}>
+                                <input type="checkbox" {...register('show_correct_answers')} style={{ opacity: 0, width: 0, height: 0 }} />
+                                <div style={{ width: '40px', height: '24px', background: 'rgba(255,255,255,0.1)', borderRadius: '99px', transition: '0.3s', position: 'relative' }} className="toggle-bg">
+                                    <div style={{ position: 'absolute', top: '2px', left: '2px', width: '20px', height: '20px', background: 'white', borderRadius: '50%', transition: '0.3s' }} className="toggle-dot" />
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* Assignment & Access Section (Full Width Row) */}
+            <div className={styles.settingsCard} style={{ marginTop: '1.5rem' }}>
+                <h4 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.95rem' }}>
+                    <Users size={14} color="#60a5fa" /> Visibility & Assignment
+                </h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1rem' }}>
+                    <span style={{ color: '#f87171' }}>*</span> Select at least one: an Academic Level OR specific students to assign this exam.
+                </p>
+
+                <div className={styles.formGrid}>
+                    {/* Level / Group Selection */}
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Target Academic Level *</label>
+                        <div className={styles.dropdownWrapper}>
+                            <select {...register('target_group')} className={`${styles.dropdownSelect} ${errors.target_group ? styles.inputError : ''}`}>
+                                <option value="">Select a level...</option>
+                                {levels.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                            </select>
+                            <div className={styles.dropdownIcon}>
+                                <ChevronDown size={18} />
+                            </div>
+                        </div>
+                        {errors.target_group && <span className={styles.errorText}>{errors.target_group.message}</span>}
+                        {!errors.target_group && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            Select a level OR pick specific students below.
+                        </span>}
+                    </div>
+
+                    {/* Specific Student Selection */}
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Specific Students *</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.2rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIsPickerOpen(true)}
+                                className={`${styles.input} ${errors.target_group ? styles.inputError : ''}`}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px', padding: '0.75rem 1rem',
+                                    background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)',
+                                    color: 'white', borderRadius: '8px', cursor: 'pointer', width: '100%',
+                                    transition: 'all 0.2s', justifyContent: 'center'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.borderColor = '#818cf8'}
+                                onMouseOut={(e) => e.currentTarget.style.borderColor = errors.target_group ? '#f87171' : 'rgba(255,255,255,0.2)'}
+                            >
+                                <UserPlus size={16} color="#818cf8" />
+                                {watchStudentIds.length > 0
+                                    ? `Selected (${watchStudentIds.length}) Students`
+                                    : 'Pick Specific Students...'}
+                            </button>
+                            {watchStudentIds.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setValue('target_student_ids', [])}
+                                    style={{ width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '0.5rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 500 }}
+                                >
+                                    Clear Selection
+                                </button>
+                            )}
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                            Select a level above OR pick specific students here.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <StudentPickerModal
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                levelFilter={watchGroup}
+                selectedStudentIds={watchStudentIds}
+                onApplySelection={(ids) => setValue('target_student_ids', ids, { shouldDirty: true, shouldValidate: true })}
+            />
+        </div>
+    );
+}
+
+export default Step3Settings;
