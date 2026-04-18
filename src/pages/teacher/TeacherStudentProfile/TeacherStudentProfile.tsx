@@ -3,11 +3,11 @@ import { useStudentProfile } from '../../../features/teacher-student-profile/hoo
 import {
     ArrowLeft, Mail, User, GraduationCap, BookOpen,
     TrendingUp, CheckCircle, XCircle, Award, Calendar,
-    Phone, Building2, Bookmark
+    Phone, Bookmark
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, BarChart, Bar, Cell
+    ResponsiveContainer
 } from 'recharts';
 import styles from './TeacherStudentProfile.module.css';
 
@@ -93,7 +93,7 @@ export default function TeacherStudentProfile() {
                     <div className={styles.metaRow}>
                         <span className={styles.metaItem}>
                             <User size={14} />
-                            ID: {profile.student_id || 'N/A'}
+                            ID: {profile.student_code || 'N/A'}
                         </span>
                         <span className={styles.metaItem}>
                             <Mail size={14} />
@@ -109,7 +109,7 @@ export default function TeacherStudentProfile() {
                         </span>
                         <span className={styles.metaItem}>
                             <Bookmark size={14} />
-                            Major: {profile.major || profile.specialization || profile.department || 'N/A'}
+                            Major: {profile.major || 'N/A'}
                         </span>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ export default function TeacherStudentProfile() {
                                         borderRadius: '8px',
                                         color: '#fff'
                                     }}
-                                    formatter={(value: number) => [`${value}%`, 'Score']}
+                                    formatter={(value) => [`${value}%`, 'Score']}
                                     labelFormatter={(label, payload) => {
                                         const item = payload?.[0]?.payload;
                                         return item?.fullName || label;

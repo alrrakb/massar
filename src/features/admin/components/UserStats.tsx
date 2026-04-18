@@ -1,10 +1,11 @@
-import { UserCircle } from 'lucide-react';
+import { UserCircle, X } from 'lucide-react';
 
 interface Props {
   user: any;
+  onClose?: () => void;
 }
 
-export default function UserStats({ user }: Props) {
+export default function UserStats({ user, onClose }: Props) {
   if (!user) return null;
 
   return (
@@ -12,7 +13,7 @@ export default function UserStats({ user }: Props) {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">User Statistics</h2>
-          <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400">
             <X size={24} />
           </button>
         </div>

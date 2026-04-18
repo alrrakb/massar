@@ -49,7 +49,7 @@ export const adminApi = {
   // ⚠️ IMPORTANT: Do NOT manually insert into profiles table!
   // Profile creation is handled by database triggers from auth.users
   // If you need to create a user, use supabase.auth.admin.createUser() instead
-  async createUser(userData: Partial<UserProfile>) {
+  async createUser(_userData: Partial<UserProfile>) {
     // This method should NOT be used for creating new users
     // Users should be created via auth.users which triggers profile creation
     throw new Error('User creation is handled by auth.users. Do not manually insert into profiles table.');
@@ -67,7 +67,7 @@ export const adminApi = {
   },
 
   async getMajors() {
-    const { data, error } = await supabase
+    const { data, error } = await anonClient
       .from('majors')
       .select('*')
       .order('name');
@@ -76,7 +76,7 @@ export const adminApi = {
   },
 
   async getAcademicLevels() {
-    const { data, error } = await supabase
+    const { data, error } = await anonClient
       .from('academic_levels')
       .select('*')
       .order('display_order');

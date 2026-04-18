@@ -4,14 +4,12 @@ export interface StudentProfile {
     id: string;
     full_name: string | null;
     email: string;
-    student_id: string | null;
+    student_code: string | null;
     avatar_url: string | null;
     role: string;
     level: string | null;
     major: string | null;
     mobile: string | null;
-    department: string | null;
-    specialization: string | null;
     created_at: string;
 }
 
@@ -41,7 +39,14 @@ export const studentProfileService = {
     async getStudentProfile(studentId: string): Promise<StudentProfile | null> {
         const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, email, student_id, avatar_url, role, level, major, mobile, department, specialization, created_at')
+            .select(`
+                id, full_name, email, avatar_url, role, mobile, created_at,
+                student_profiles (
+                    student_code,
+                    academic_levels ( name ),
+                    majors ( name )
+                )
+            `)
             .eq('id', studentId)
             .eq('role', 'student')
             .single();
@@ -51,7 +56,21 @@ export const studentProfileService = {
             throw error;
         }
 
-        return data;
+        if (!data) return null;
+
+        const sp = (data as any).student_profiles;
+        return {
+            id: data.id,
+            full_name: data.full_name,
+            email: data.email,
+            avatar_url: data.avatar_url,
+            role: data.role,
+            mobile: data.mobile,
+            created_at: data.created_at,
+            student_code: sp?.student_code ?? null,
+            level: sp?.academic_levels?.name ?? null,
+            major: sp?.majors?.name ?? null,
+        };
     },
 
     async getStudentSubmissions(studentId: string): Promise<StudentSubmission[]> {

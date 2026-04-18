@@ -79,7 +79,7 @@ export function Step2Builder() {
                 type = 'true_false';
             } else if (q.type === 'essay') {
                 type = 'essay';
-            } else if (q.type === 'short_answer') {
+            } else {
                 type = 'short_answer';
                 correctAnswer = q.correct_answer || '';
             }

@@ -3,11 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
 import {
-    User, Shield, BookOpen, BarChart2, Mail,
+    User, BookOpen, BarChart2,
     Phone, Calendar
 } from 'lucide-react';
-import { supabase } from '../../../../services/supabase';
-import { toast } from 'react-hot-toast';
 import styles from '../../../student/StudentProfile.module.css';
 
 // ─── Zod Schema ──────────────────────────────────────────────────────────────
@@ -105,8 +103,8 @@ export default function TeacherPersonalTab({ initialData }: Props) {
                 </Field>
 
                 <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <Field label="Major" icon={<BookOpen size={14} />}>
-                        <div className={styles.displayField}>{watch('major') || 'N/A'}</div>
+                    <Field label="Headline" icon={<BookOpen size={14} />}>
+                        <div className={styles.displayField}>{watch('headline') || 'N/A'}</div>
                     </Field>
                 </div>
 

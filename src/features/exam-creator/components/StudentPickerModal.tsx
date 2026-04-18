@@ -6,7 +6,7 @@ import styles from '../ExamCreator.module.css';
 interface Student {
     id: string;
     full_name: string;
-    student_id: string;
+    student_code: string | null;
     level: string | null;
 }
 
@@ -46,21 +46,30 @@ export function StudentPickerModal({ isOpen, onClose, levelFilter, selectedStude
         setLoading(true);
         setError(null);
         try {
-            let query = supabase
+            const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select('id, full_name, student_id, level')
+                .select(`
+                    id, full_name,
+                    student_profiles ( student_code, academic_levels ( name ) )
+                `)
                 .eq('role', 'student')
                 .order('full_name', { ascending: true })
-                .limit(100);
+                .limit(200);
 
-            if (levelFilter && levelFilter.length > 0) {
-                query = query.eq('level', levelFilter);
-            }
-
-            const { data, error: fetchError } = await query;
-            
             if (fetchError) throw fetchError;
-            setStudents(data || []);
+            const mapped = (data || []).map((p: any) => {
+                const sp = Array.isArray(p.student_profiles) ? p.student_profiles[0] : p.student_profiles;
+                return {
+                    id: p.id,
+                    full_name: p.full_name || 'Unknown User',
+                    student_code: sp?.student_code ?? null,
+                    level: sp?.academic_levels?.name ?? null,
+                };
+            });
+            const filtered = levelFilter && levelFilter.length > 0
+                ? mapped.filter(s => s.level === levelFilter)
+                : mapped;
+            setStudents(filtered);
         } catch (err: any) {
             console.error('Failed to fetch students', err);
             setError(err.message || 'Failed to load students. Please try again.');
@@ -88,7 +97,7 @@ export function StudentPickerModal({ isOpen, onClose, levelFilter, selectedStude
     const filteredStudents = students.filter(s => {
         if (!searchTerm.trim()) return true;
         const sterm = searchTerm.toLowerCase();
-        return (s.full_name?.toLowerCase().includes(sterm) || s.student_id?.toLowerCase().includes(sterm));
+        return (s.full_name?.toLowerCase().includes(sterm) || s.student_code?.toLowerCase().includes(sterm));
     });
 
     if (!isOpen) return null;
@@ -171,7 +180,7 @@ export function StudentPickerModal({ isOpen, onClose, levelFilter, selectedStude
                                     <div>
                                         <div style={{ color: 'white', fontWeight: 500 }}>{student.full_name || 'Unknown User'}</div>
                                         <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>
-                                            ID: {student.student_id || 'N/A'} • {student.level || 'No Level'}
+                                            ID: {student.student_code || 'N/A'} • {student.level || 'No Level'}
                                         </div>
                                     </div>
                                     <div style={{

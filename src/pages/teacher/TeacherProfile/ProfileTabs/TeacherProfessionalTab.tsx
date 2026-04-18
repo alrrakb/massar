@@ -12,10 +12,10 @@ interface Props {
         academic_degree?: string;
         years_of_experience?: number;
     };
+    onSaved?: (saved: Record<string, unknown>) => void;
 }
 
-
-export default function TeacherProfessionalTab({ userId, initialData, onSaved }: Props) {
+export default function TeacherProfessionalTab({ userId, initialData }: Props) {
     const [metrics, setMetrics] = useState<InstructorMetrics | null>(null);
     const [loadingMetrics, setLoadingMetrics] = useState(true);
 
@@ -33,39 +33,6 @@ export default function TeacherProfessionalTab({ userId, initialData, onSaved }:
             setLoadingMetrics(false);
         });
     }, [userId]);
-
-    const handleSave = async () => {
-        try {
-            setErrors({});
-            const validData = professionalSchema.parse(formData);
-
-            setSaving(true);
-            const { error } = await supabase
-                .from('profiles')
-                .update(validData)
-                .eq('id', userId);
-
-            if (error) throw error;
-
-            onSaved(validData);
-            setIsEditing(false);
-            toast.success('Professional details updated successfully');
-        } catch (err: any) {
-            if (err instanceof z.ZodError) {
-                const newErrors: any = {};
-                err.issues.forEach((e: z.ZodIssue) => {
-                    if (e.path[0]) newErrors[e.path[0]] = e.message;
-                });
-                setErrors(newErrors);
-                toast.error('Please check the form for errors');
-            } else {
-                toast.error('Failed to save professional data');
-                console.error(err);
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
 
     const statCards = [
         { label: 'Courses Managed', value: metrics ? String(metrics.totalCourses) : '—', icon: BookOpen, color: '#60a5fa' },

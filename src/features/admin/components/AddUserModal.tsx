@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { X, UserPlus, Loader2 } from "lucide-react";
 import { adminApi } from "../api/adminApi";
-import type { Major, AcademicLevel } from "../types";
+import type { Major, AcademicLevel, CreateUserInput } from "../types";
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -84,21 +84,16 @@ export default function AddUserModal({
 
     try {
       // Prepare user data based on role
-      const userData: Record<string, any> = {
+      const userData: CreateUserInput = {
         email: formData.email,
         password: formData.password,
         full_name: formData.full_name,
         role: formData.role,
+        major: formData.role === "student" ? (formData.major || null) : null,
+        level: formData.role === "student" ? (formData.level || null) : null,
+        department: formData.role === "teacher" ? (formData.department || null) : null,
+        specialization: formData.role === "teacher" ? (formData.specialization || null) : null,
       };
-
-      // Add role-specific fields
-      if (formData.role === "student") {
-        if (formData.major) userData.major = formData.major;
-        if (formData.level) userData.level = formData.level;
-      } else if (formData.role === "teacher") {
-        if (formData.department) userData.department = formData.department;
-        if (formData.specialization) userData.specialization = formData.specialization;
-      }
 
       // Call the API to create user
       await adminApi.createUser(userData);

@@ -22,12 +22,11 @@ export function Step3Settings() {
     }, [watchAllowReview, setValue]);
 
     useEffect(() => {
-        // Fetch unique levels for the dropdown
+        // Fetch levels from academic_levels table (split-table model)
         const fetchLevels = async () => {
-            const { data } = await supabase.from('profiles').select('level').not('level', 'is', null);
+            const { data } = await supabase.from('academic_levels').select('name').order('display_order');
             if (data) {
-                const unique = Array.from(new Set(data.map(d => d.level))).filter(Boolean) as string[];
-                setLevels(unique.sort());
+                setLevels(data.map(d => d.name).filter(Boolean));
             }
         };
         fetchLevels();

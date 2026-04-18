@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { UserCircle, BarChart3 } from 'lucide-react';
-import { useAdminUsers, adminApi } from '../../features/admin/api';
-import type { AdminUser as UserProfile, Major, AcademicLevel } from '../../features/admin/types';
+import { useAdminUsers } from '../../features/admin/api';
+import type { AdminUser as UserProfile } from '../../features/admin/types';
 import UserFilters from '../../features/admin/components/UserFilters';
 import UserTable from '../../features/admin/components/UserTable';
 import AddUserModal from '../../features/admin/components/AddUserModal';
@@ -22,17 +22,10 @@ export default function AdminTeachers() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [statsUser, setStatsUser] = useState<UserProfile | null>(null);
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
-  const [majors, setMajors] = useState<Major[]>([]);
-  const [academicLevels, setAcademicLevels] = useState<AcademicLevel[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
-  const { users, loading, filters, updateFilter, suspendUser, activateUser, deleteUser, refresh, ToastComponent } = 
-    useAdminUsers({ role: 'teacher' });
 
-  useEffect(() => {
-    adminApi.getMajors().then(setMajors).catch(console.error);
-    adminApi.getAcademicLevels().then(setAcademicLevels).catch(console.error);
-  }, []);
+  const { users, loading, filters, updateFilter, suspendUser, activateUser, deleteUser, refresh, ToastComponent } =
+    useAdminUsers({ role: 'teacher' });
 
   // Defensive programming: Use optional chaining and fallback to empty array
   const activeCount = (users || []).filter(u => u.status === 'active').length;
@@ -174,22 +167,22 @@ export default function AdminTeachers() {
           isOpen={true}
           title={confirmAction.title}
           message={confirmAction.message}
-          confirmLabel={confirmAction.confirmLabel}
-          type={confirmAction.actionType}
+          confirmText={confirmAction.confirmLabel}
+          cancelText="Cancel"
+          variant={confirmAction.actionType}
           onConfirm={executeConfirmAction}
-          onCancel={() => setConfirmAction(null)}
-          loading={confirmLoading}
+          onClose={() => setConfirmAction(null)}
+          isConfirming={confirmLoading}
         />
       )}
 
       {/* Edit User Modal */}
       {editUser && (
         <EditUserModal
+          isOpen={true}
           user={editUser}
           onClose={() => setEditUser(null)}
-          onSuccess={refresh}
-          majors={majors}
-          academicLevels={academicLevels}
+          onSave={() => { setEditUser(null); refresh(); }}
         />
       )}
 

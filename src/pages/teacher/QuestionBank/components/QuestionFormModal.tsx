@@ -4,18 +4,14 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { questionBankService } from '../../../../features/question-bank/api/questionBankService';
-import { Question, QuestionType, DifficultyLevel, questionTypeLabels, difficultyLabels } from '../../../../features/question-bank/types';
+import { Question, QuestionType, questionTypeLabels, difficultyLabels } from '../../../../features/question-bank/types';
 import styles from './QuestionFormModal.module.css';
 
 const questionSchema = z.object({
     content: z.string().min(1, 'Question content is required'),
     type: z.enum(['multiple_choice', 'true_false', 'essay']),
     difficulty: z.enum(['easy', 'medium', 'hard']),
-    course_id: z.union([z.number(), z.string()]).transform((val) => {
-        if (val === '' || val === undefined || val === null) return undefined;
-        const num = typeof val === 'string' ? parseInt(val, 10) : val;
-        return isNaN(num) ? undefined : num;
-    }).optional(),
+    course_id: z.coerce.number().optional(),
     explanation: z.string().optional(),
     tags: z.string().optional(),
     options: z.array(z.object({
@@ -46,8 +42,8 @@ export default function QuestionFormModal({ question, courses, onClose, onSave }
         handleSubmit,
         setValue,
         formState: { errors }
-    } = useForm<QuestionFormData>({
-        resolver: zodResolver(questionSchema),
+    } = useForm<QuestionFormData, unknown, QuestionFormData>({
+        resolver: zodResolver(questionSchema) as any,
         defaultValues: {
             content: '',
             type: 'multiple_choice',
@@ -86,7 +82,8 @@ export default function QuestionFormModal({ question, courses, onClose, onSave }
             } else if (question.options && question.options.length > 0) {
                 replace(question.options.map((opt, idx) => ({
                     ...opt,
-                    id: opt.id || String(idx + 1)
+                    id: opt.id || String(idx + 1),
+                    isCorrect: opt.isCorrect ?? false
                 })));
             }
             setValue('correct_answer', question.correct_answer || '');

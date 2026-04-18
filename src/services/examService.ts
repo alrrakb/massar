@@ -24,9 +24,10 @@ export const examService = {
             .select('role, student_profiles(academic_levels(name))')
             .eq('id', user.id)
             .single();
+        const sp = Array.isArray((profileRaw as any).student_profiles) ? (profileRaw as any).student_profiles[0] : (profileRaw as any).student_profiles;
         const profile = profileRaw ? {
             role: (profileRaw as any).role,
-            level: (profileRaw as any).student_profiles?.academic_levels?.name ?? null,
+            level: sp?.academic_levels?.name ?? null,
         } : null;
 
         // Fetch exams and their submissions for the current user
@@ -130,7 +131,7 @@ export const examService = {
                     id,
                     full_name,
                     avatar_url,
-                    student_id
+                    student_profiles ( student_code )
                 )
             `)
             .eq('exam_id', examId)

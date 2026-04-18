@@ -434,7 +434,7 @@ export default function AIQuestionGenerator({
                                                 const types = e.target.checked 
                                                     ? [...config.types, 'mcq']
                                                     : config.types.filter(t => t !== 'mcq');
-                                                setConfig(prev => ({ ...prev, types }));
+                                                setConfig(prev => ({ ...prev, types: types as AIGenerationConfig['types'] }));
                                             }}
                                         />
                                         <span>Multiple Choice</span>
@@ -447,7 +447,7 @@ export default function AIQuestionGenerator({
                                                 const types = e.target.checked 
                                                     ? [...config.types, 'true_false']
                                                     : config.types.filter(t => t !== 'true_false');
-                                                setConfig(prev => ({ ...prev, types }));
+                                                setConfig(prev => ({ ...prev, types: types as AIGenerationConfig['types'] }));
                                             }}
                                         />
                                         <span>True/False</span>
@@ -460,7 +460,7 @@ export default function AIQuestionGenerator({
                                                 const types = e.target.checked 
                                                     ? [...config.types, 'essay']
                                                     : config.types.filter(t => t !== 'essay');
-                                                setConfig(prev => ({ ...prev, types }));
+                                                setConfig(prev => ({ ...prev, types: types as AIGenerationConfig['types'] }));
                                             }}
                                         />
                                         <span>Essay / Subjective</span>

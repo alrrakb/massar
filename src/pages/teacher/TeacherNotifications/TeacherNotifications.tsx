@@ -21,7 +21,6 @@ type NotificationFormData = z.infer<typeof notificationSchema>;
 
 export default function TeacherNotifications() {
     const [sentNotifications, setSentNotifications] = useState<Notification[]>([]);
-    const [loading, setLoading] = useState(false);
     const [students, setStudents] = useState<{ id: string; full_name: string | null; student_id: string | null }[]>([]);
     const [levels, setLevels] = useState<string[]>([]);
     const [majors, setMajors] = useState<string[]>([]);

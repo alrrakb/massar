@@ -1,5 +1,5 @@
 import { supabase } from '../../../services/supabase';
-import { Notification, NotificationWithReadStatus, CreateNotificationRequest, NotificationTargetType } from '../types';
+import { Notification, NotificationWithReadStatus, CreateNotificationRequest } from '../types';
 
 export const notificationService = {
     // Teacher: Send notification
@@ -37,28 +37,45 @@ export const notificationService = {
         let targetStudentIds: string[] = [];
 
         if (notification.target_type === 'global') {
-            // Get all students
+            // Get all students via student_profiles
             const { data } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('role', 'student');
+                .from('student_profiles')
+                .select('id');
             targetStudentIds = data?.map(p => p.id) || [];
         } else if (notification.target_type === 'individual' && notification.target_id) {
             targetStudentIds = [notification.target_id];
         } else if (notification.target_type === 'level' && notification.level) {
-            const { data } = await supabase
-                .from('profiles')
+            const { data: lvl } = await supabase
+                .from('academic_levels')
                 .select('id')
-                .eq('role', 'student')
-                .eq('level', notification.level);
-            targetStudentIds = data?.map(p => p.id) || [];
+                .eq('name', notification.level)
+                .maybeSingle();
+            if (lvl) {
+                const { data } = await supabase
+                    .from('student_profiles')
+                    .select('id')
+                    .eq('level_id', lvl.id);
+                targetStudentIds = data?.map(p => p.id) || [];
+            }
         } else if (notification.target_type === 'major' && notification.major) {
-            const { data } = await supabase
-                .from('profiles')
+            const { data: maj } = await supabase
+                .from('majors')
                 .select('id')
-                .eq('role', 'student')
-                .or(`major.eq.${notification.major},specialization.eq.${notification.major},department.eq.${notification.major}`);
-            targetStudentIds = data?.map(p => p.id) || [];
+                .eq('name', notification.major)
+                .maybeSingle();
+            const [spData, tpData] = await Promise.all([
+                maj
+                    ? supabase.from('student_profiles').select('id').eq('major_id', maj.id)
+                    : Promise.resolve({ data: [] }),
+                supabase
+                    .from('teacher_profiles')
+                    .select('id')
+                    .or(`specialization.eq.${notification.major},department.eq.${notification.major}`)
+            ]);
+            const ids = new Set<string>();
+            (spData.data ?? []).forEach(p => ids.add(p.id));
+            (tpData.data ?? []).forEach(p => ids.add(p.id));
+            targetStudentIds = [...ids];
         }
 
         console.log('Target type:', notification.target_type);
@@ -226,56 +243,75 @@ export const notificationService = {
     // Get available levels for targeting
     async getAvailableLevels(): Promise<string[]> {
         const { data, error } = await supabase
-            .from('profiles')
-            .select('level')
-            .eq('role', 'student')
-            .not('level', 'is', null);
+            .from('academic_levels')
+            .select('name')
+            .order('display_order');
 
         if (error) {
             console.error('Error fetching levels:', error);
             return [];
         }
 
-        const levels = [...new Set(data?.map(p => p.level).filter(Boolean))];
-        return levels.sort();
+        return data?.map(l => l.name).filter(Boolean) || [];
     },
 
     // Get available majors for targeting
     async getAvailableMajors(): Promise<string[]> {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('major, specialization, department')
-            .eq('role', 'student');
+        const [majorsRes, tpRes] = await Promise.all([
+            supabase.from('majors').select('name'),
+            supabase.from('teacher_profiles').select('specialization, department')
+        ]);
 
-        if (error) {
-            console.error('Error fetching majors:', error);
+        if (majorsRes.error || tpRes.error) {
+            console.error('Error fetching majors:', majorsRes.error || tpRes.error);
             return [];
         }
 
         const majors = new Set<string>();
-        data?.forEach(p => {
-            if (p.major) majors.add(p.major);
-            if (p.specialization) majors.add(p.specialization);
-            if (p.department) majors.add(p.department);
+        (majorsRes.data ?? []).forEach(m => { if (m.name) majors.add(m.name); });
+        (tpRes.data ?? []).forEach(t => {
+            if (t.specialization) majors.add(t.specialization);
+            if (t.department) majors.add(t.department);
         });
 
         return [...majors].sort();
     },
 
-    // Search students for individual targeting
+    // Search students for individual targeting (by name OR student_code)
     async searchStudents(query: string): Promise<{ id: string; full_name: string | null; student_id: string | null }[]> {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id, full_name, student_id')
-            .eq('role', 'student')
-            .or(`full_name.ilike.%${query}%,student_id.ilike.%${query}%`)
+        // Resolve student_profiles rows matching by student_code first
+        const { data: codeMatches } = await supabase
+            .from('student_profiles')
+            .select('id')
+            .ilike('student_code', `%${query}%`)
             .limit(10);
+        const codeMatchIds = (codeMatches ?? []).map((r) => r.id);
+
+        let q = supabase
+            .from('profiles')
+            .select('id, full_name, student_profiles(student_code)')
+            .eq('role', 'student');
+
+        if (codeMatchIds.length > 0) {
+            q = q.or(`full_name.ilike.%${query}%,id.in.(${codeMatchIds.join(',')})`);
+        } else {
+            q = q.ilike('full_name', `%${query}%`);
+        }
+
+        const { data, error } = await q.limit(10);
 
         if (error) {
             console.error('Error searching students:', error);
             return [];
         }
 
-        return data || [];
+        return (data ?? []).map((p: any) => {
+            const sp = Array.isArray(p.student_profiles) ? p.student_profiles[0] : p.student_profiles;
+            return {
+                id: p.id,
+                full_name: p.full_name,
+                student_id: sp?.student_code ?? null,
+            };
+        });
     }
 };

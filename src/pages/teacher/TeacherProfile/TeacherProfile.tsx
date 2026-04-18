@@ -9,6 +9,7 @@ import UserAvatar from '../../../components/UserAvatar';
 import { toast } from 'react-hot-toast';
 import styles from '../../student/StudentProfile.module.css';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import { flattenProfile } from '../../../services/auth';
 
 // ─── Lazy Tab Components ──────────────────────────────────────────────────────
 const TeacherPersonalTab = lazy(() => import('./ProfileTabs/TeacherPersonalTab'));
@@ -42,18 +43,25 @@ export default function TeacherProfile() {
         const fetchProfile = async () => {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    *,
+                    teacher_profiles (
+                        employee_code, department, specialization,
+                        headline, bio, academic_degree, years_experience
+                    )
+                `)
                 .eq('id', user.id)
                 .maybeSingle();
-            
+
             if (error) {
                 console.error('Profile fetch error:', error);
                 toast.error(`Failed to load profile: ${error.message}`);
                 return;
             }
-            
-            setProfileData(data);
-            setAvatarUrl(data?.avatar_url ?? null);
+
+            const flat = data ? flattenProfile(data) : null;
+            setProfileData(flat);
+            setAvatarUrl(flat?.avatar_url ?? null);
         };
         
         fetchProfile();
@@ -231,7 +239,7 @@ export default function TeacherProfile() {
                                 department: profileData?.department ?? '',
                                 specialization: profileData?.specialization ?? '',
                                 academic_degree: profileData?.academic_degree ?? '',
-                                years_of_experience: profileData?.years_of_experience ?? 0
+                                years_of_experience: profileData?.years_experience ?? 0
                             }}
                             onSaved={handleProfileSaved}
                         />

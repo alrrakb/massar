@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth';
 import { supabase } from '../services/supabase';
@@ -219,17 +219,6 @@ const Login = () => {
             setError(err.message || 'Invalid Two-Factor Auth code or connection error.');
         } finally {
             setIsMfaLoading(false);
-        }
-    };
-
-    const handleGoogleLogin = async () => {
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            setError(err.message || 'Google login failed');
         }
     };
 

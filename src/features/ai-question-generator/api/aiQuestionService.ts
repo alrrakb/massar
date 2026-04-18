@@ -142,7 +142,7 @@ async function mockExtractTextFromPDF(source: DocumentSource): Promise<string> {
  * Mock function to generate questions
  */
 async function mockGenerateQuestionsWithAI(
-    content: string,
+    _content: string,
     config: AIGenerationConfig
 ): Promise<GeneratedQuestion[]> {
     await new Promise(resolve => setTimeout(resolve, 2000));

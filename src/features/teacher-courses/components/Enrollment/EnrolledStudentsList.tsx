@@ -54,8 +54,8 @@ export function EnrolledStudentsList({ students, isLoading, onRemove }: Enrolled
                                     )}
                                 </div>
                                 <div className="text-xs text-slate-500 truncate flex items-center gap-2">
-                                    <span>{student?.student_id ?? student?.email}</span>
-                                    {student?.level && <span>• Lvl {student.level}</span>}
+                                    <span>{student?.student_profiles?.student_code ?? student?.email}</span>
+                                    {student?.student_profiles?.academic_levels?.name && <span>• Lvl {student.student_profiles.academic_levels.name}</span>}
                                     {enrollment.enrolled_at && (
                                         <span>• {format(new Date(enrollment.enrolled_at), 'MMM d, yyyy')}</span>
                                     )}

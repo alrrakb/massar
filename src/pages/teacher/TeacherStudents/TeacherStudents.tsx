@@ -8,7 +8,7 @@ interface Student {
     id: string;
     full_name: string | null;
     email: string;
-    student_id: string | null;
+    student_code: string | null;
     avatar_url: string | null;
     level: string | null;
 }
@@ -28,7 +28,7 @@ export default function TeacherStudents() {
         const filtered = students.filter(student =>
             (student.full_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
             (student.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-            (student.student_id?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+            (student.student_code?.toLowerCase() || '').includes(searchQuery.toLowerCase())
         );
         setFilteredStudents(filtered);
     }, [searchQuery, students]);
@@ -38,13 +38,27 @@ export default function TeacherStudents() {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, full_name, email, student_id, avatar_url, level')
+                .select(`
+                    id, full_name, email, avatar_url,
+                    student_profiles ( student_code, academic_levels ( name ) )
+                `)
                 .eq('role', 'student')
                 .order('full_name', { ascending: true });
 
             if (error) throw error;
-            setStudents(data || []);
-            setFilteredStudents(data || []);
+            const mapped = (data || []).map((p: any) => {
+                const sp = Array.isArray(p.student_profiles) ? p.student_profiles[0] : p.student_profiles;
+                return {
+                    id: p.id,
+                    full_name: p.full_name,
+                    email: p.email,
+                    student_code: sp?.student_code ?? null,
+                    avatar_url: p.avatar_url,
+                    level: sp?.academic_levels?.name ?? null,
+                };
+            });
+            setStudents(mapped);
+            setFilteredStudents(mapped);
         } catch (err) {
             console.error('Error fetching students:', err);
         } finally {
@@ -136,7 +150,7 @@ export default function TeacherStudents() {
                                     </span>
                                     <span className={styles.metaItem}>
                                         <GraduationCap size={14} />
-                                        ID: {student.student_id || 'N/A'} • Level: {student.level || 'N/A'}
+                                        ID: {student.student_code || 'N/A'} • Level: {student.level || 'N/A'}
                                     </span>
                                 </div>
                             </div>

@@ -25,6 +25,11 @@
     "include": [
         "src"
     ],
+    "exclude": [
+        "node_modules",
+        "src/features/admin/components/common",
+        "src/features/admin/pages"
+    ],
     "references": [
         {
             "path": "./tsconfig.node.json"

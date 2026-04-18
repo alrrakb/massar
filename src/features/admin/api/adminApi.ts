@@ -4,7 +4,7 @@
 // ============================================================
 
 import { getSupabaseClient, getServiceClient } from '../../../services/supabase';
-import type { AdminUser, AdminUserFilters, AdminUserPagination, UpdateUserProfileInput, UpdateUserStatusInput, CreateUserInput } from './types';
+import type { AdminUser, AdminUserFilters, AdminUserPagination, UpdateUserProfileInput, UserRole, UserStatus, CreateUserInput } from '../types';
 
 // Use singleton clients - no duplicate instances
 const anonClient = getSupabaseClient();
@@ -232,5 +232,39 @@ export const adminApi = {
     }
 
     return data as any[];
+  },
+
+  async createUser(input: CreateUserInput): Promise<AdminUser> {
+    const { data, error } = await serviceClient.auth.admin.createUser({
+      email: input.email,
+      password: input.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: input.full_name,
+        role: input.role,
+      },
+    });
+
+    if (error) throw new Error(`Failed to create user: ${error.message}`);
+
+    await anonClient.from('profiles').update({
+      full_name: input.full_name,
+      role: input.role,
+      major: input.major ?? null,
+      level: input.level ?? null,
+      specialization: input.specialization ?? null,
+      department: input.department ?? null,
+    }).eq('id', data.user.id);
+
+    return {
+      id: data.user.id,
+      email: input.email,
+      full_name: input.full_name,
+      role: input.role,
+      status: 'active' as UserStatus,
+      two_factor_enabled: false,
+      created_at: data.user.created_at,
+      updated_at: data.user.updated_at ?? data.user.created_at,
+    };
   },
 };

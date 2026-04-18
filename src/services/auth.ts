@@ -4,7 +4,10 @@ import { UserProfile } from '../types';
 // Merges role-specific sub-table rows onto the flat UserProfile shape.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function flattenProfile(raw: any): UserProfile {
-    const { student_profiles: sp, teacher_profiles: tp, ...base } = raw;
+    const { student_profiles: spRaw, teacher_profiles: tpRaw, ...base } = raw;
+    // Supabase may return one-to-one JOINs as arrays — normalise to single object
+    const sp = Array.isArray(spRaw) ? spRaw[0] : spRaw;
+    const tp = Array.isArray(tpRaw) ? tpRaw[0] : tpRaw;
     const profile: UserProfile = base as UserProfile;
     if (sp) {
         profile.student_id    = sp.student_code   ?? undefined;
@@ -111,10 +114,21 @@ export const authService = {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return null;
 
-            // Fetch extra profile data from 'profiles' table
+            // Fetch profile with role-specific sub-tables (split-table model)
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select(`
+                    *,
+                    student_profiles (
+                        student_code, major_id, level_id, gpa,
+                        majors ( name ),
+                        academic_levels ( name )
+                    ),
+                    teacher_profiles (
+                        employee_code, department, specialization,
+                        headline, bio, academic_degree, years_experience
+                    )
+                `)
                 .eq('id', user.id)
                 .single();
 
@@ -122,7 +136,7 @@ export const authService = {
                 console.error('Error fetching profile:', error);
                 return null;
             }
-            return profile as UserProfile;
+            return flattenProfile(profile);
         };
 
         // Create timeout promise (3 seconds) - reduced from 15s to avoid login hang

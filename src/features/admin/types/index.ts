@@ -55,6 +55,19 @@ export interface UpdateUserStatusInput {
   status: UserStatus;
 }
 
+export interface Major {
+  id: number;
+  name: string;
+  code?: string | null;
+}
+
+export interface AcademicLevel {
+  id: number;
+  name: string;
+  code?: string | null;
+  display_order?: number | null;
+}
+
 export interface CreateUserInput {
   email: string;
   password: string;

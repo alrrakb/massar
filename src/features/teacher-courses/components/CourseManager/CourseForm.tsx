@@ -13,7 +13,7 @@ const courseSchema = z.object({
     instructor: z.string().optional(),
     department: z.string().optional(),
     semester: z.string().optional(),
-    credits: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(0).optional()),
+    credits: z.coerce.number().min(0).optional(),
 });
 
 interface CourseFormProps {
@@ -28,8 +28,8 @@ export function CourseForm({ course, onSubmit, onClose }: CourseFormProps) {
         handleSubmit,
         reset,
         formState: { errors, isSubmitting },
-    } = useForm<CourseFormData>({
-        resolver: zodResolver(courseSchema),
+    } = useForm<CourseFormData, unknown, CourseFormData>({
+        resolver: zodResolver(courseSchema) as any,
         defaultValues: {
             title: course?.title || '',
             code: course?.code || '',

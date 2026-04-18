@@ -6,7 +6,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from './adminApi';
-import type { AdminUserFilters, AdminUserPagination } from '../types';
+import type { AdminUser, AdminUserFilters, AdminUserPagination } from '../types';
 
 const ADMIN_USERS_KEY = ['admin_users'] as const;
 
@@ -35,9 +35,9 @@ export function useAdminUsers(initialFilters: AdminUserFilters = {}) {
     updateFilter,
     refresh: refetch,
     // Placeholder functions - to be implemented
-    suspendUser: async () => {},
-    activateUser: async () => {},
-    deleteUser: async () => {},
+    suspendUser: async (_userId: string) => {},
+    activateUser: async (_userId: string) => {},
+    deleteUser: async (_userId: string) => {},
     ToastComponent: null,
   };
 }

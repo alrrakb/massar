@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Filter, Copy, Trash2, Edit, BookOpen, X } from 'lucide-react';
 import { questionBankService } from '../../../features/question-bank/api/questionBankService';
-import { Question, QuestionFilters, QuestionType, DifficultyLevel, questionTypeLabels, difficultyLabels, difficultyColors } from '../../../features/question-bank/types';
+import { Question, QuestionFilters, questionTypeLabels, difficultyLabels, difficultyColors } from '../../../features/question-bank/types';
 import QuestionFormModal from './components/QuestionFormModal';
 import styles from './QuestionBank.module.css';
 
@@ -12,12 +12,10 @@ export default function QuestionBank() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [courses, setCourses] = useState<{ id: number; title: string; code: string }[]>([]);
-    const [tags, setTags] = useState<string[]>([]);
 
     useEffect(() => {
         loadQuestions();
         loadCourses();
-        loadTags();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -43,15 +41,6 @@ export default function QuestionBank() {
             setCourses(data);
         } catch (err) {
             console.error('Error loading courses:', err);
-        }
-    };
-
-    const loadTags = async () => {
-        try {
-            const data = await questionBankService.getUniqueTags();
-            setTags(data);
-        } catch (err) {
-            console.error('Error loading tags:', err);
         }
     };
 
@@ -104,7 +93,6 @@ export default function QuestionBank() {
 
     const handleSave = async () => {
         loadQuestions();
-        loadTags();
         handleModalClose();
     };
 
