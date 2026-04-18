@@ -15,6 +15,7 @@ export interface UserProfile {
     major?: string;
     level_id?: number;
     level?: string;
+    gpa?: number;
     // Teacher fields
     employee_id?: string;
     department?: string;

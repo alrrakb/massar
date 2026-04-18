@@ -1,6 +1,31 @@
 import { supabase } from './supabase';
 import { UserProfile } from '../types';
 
+// Merges role-specific sub-table rows onto the flat UserProfile shape.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function flattenProfile(raw: any): UserProfile {
+    const { student_profiles: sp, teacher_profiles: tp, ...base } = raw;
+    const profile: UserProfile = base as UserProfile;
+    if (sp) {
+        profile.student_id    = sp.student_code   ?? undefined;
+        profile.major_id      = sp.major_id        ?? undefined;
+        profile.level_id      = sp.level_id        ?? undefined;
+        profile.gpa           = sp.gpa             ?? undefined;
+        profile.major         = sp.majors?.name    ?? undefined;
+        profile.level         = sp.academic_levels?.name ?? undefined;
+    }
+    if (tp) {
+        profile.employee_id   = tp.employee_code   ?? undefined;
+        profile.department    = tp.department      ?? undefined;
+        profile.specialization = tp.specialization ?? undefined;
+        profile.headline      = tp.headline        ?? undefined;
+        profile.bio           = tp.bio             ?? undefined;
+        profile.academic_degree = tp.academic_degree ?? undefined;
+        profile.years_experience = tp.years_experience ?? undefined;
+    }
+    return profile;
+}
+
 export const authService = {
     // Sign Up (Register) with Metadata
     async signUp(email: string, password: string, fullName: string, metadata: any = {}) {

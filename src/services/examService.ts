@@ -19,11 +19,15 @@ export const examService = {
         if (!user) throw new Error('Not authenticated');
 
         // Fetch user profile to know their level and role
-        const { data: profile } = await supabase
+        const { data: profileRaw } = await supabase
             .from('profiles')
-            .select('role, level')
+            .select('role, student_profiles(academic_levels(name))')
             .eq('id', user.id)
             .single();
+        const profile = profileRaw ? {
+            role: (profileRaw as any).role,
+            level: (profileRaw as any).student_profiles?.academic_levels?.name ?? null,
+        } : null;
 
         // Fetch exams and their submissions for the current user
         const { data, error } = await supabase

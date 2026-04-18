@@ -9,7 +9,7 @@ import UserAvatar from '../../components/UserAvatar';
 import { toast } from 'react-hot-toast';
 import styles from './StudentProfile.module.css';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { ReadOnlyGuard } from '../../features/admin-management/components/ReadOnlyGuard';
+import { flattenProfile } from '../../services/auth';
 
 // ─── Lazy Tab Components ──────────────────────────────────────────────────────
 const PersonalTab = lazy(() => import('./ProfileTabs/PersonalTab'));
@@ -41,11 +41,16 @@ export default function StudentProfile() {
     // ── Fetch profile ──────────────────────────────────────────────────────
     useEffect(() => {
         if (!user) return;
-        supabase.from('profiles').select('*').eq('id', user.id).single()
+        supabase
+            .from('profiles')
+            .select(`*, student_profiles(student_code, major_id, level_id, gpa, majors(id, name, code), academic_levels(id, name, code))`)
+            .eq('id', user.id)
+            .single()
             .then(({ data, error }) => {
                 if (error) { toast.error('Failed to load profile'); return; }
-                setProfileData(data);
-                setAvatarUrl(data?.avatar_url ?? null);
+                const flat = flattenProfile(data);
+                setProfileData(flat);
+                setAvatarUrl(flat?.avatar_url ?? null);
             });
     }, [user]);
 
