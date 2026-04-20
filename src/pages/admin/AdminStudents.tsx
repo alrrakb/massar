@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GraduationCap, BarChart3 } from 'lucide-react';
+import { GraduationCap, BarChart3, CheckCircle, XCircle } from 'lucide-react';
 import { useAdminUsers } from '../../features/admin/api';
 import type { AdminUser as UserProfile } from '../../features/admin/types';
 import UserFilters from '../../features/admin/components/UserFilters';
@@ -22,14 +22,12 @@ export default function AdminStudents() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [statsUser, setStatsUser] = useState<UserProfile | null>(null);
   const [editUser, setEditUser] = useState<UserProfile | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { users, loading, filters, updateFilter, suspendUser, activateUser, deleteUser, refresh, ToastComponent } =
+  const { users, loading, filters, updateFilter, suspendUser, activateUser, deleteUser, refresh, toast } =
     useAdminUsers({ role: 'student' });
 
-  // Defensive programming: Use optional chaining and fallback to empty array
-  const activeCount = (users || []).filter(u => u.status === 'active').length;
-  const suspendedCount = (users || []).filter(u => u.status === 'suspended').length;
+  const activeCount = users.filter(u => u.status === 'active').length;
+  const suspendedCount = users.filter(u => u.status === 'suspended').length;
 
   const handleEdit = (id: string) => {
     const user = users.find(u => u.id === id);
@@ -47,20 +45,20 @@ export default function AdminStudents() {
 
     const configs = {
       suspend: {
-        title: 'Suspend Account',
-        message: `Are you sure you want to suspend ${user.full_name}? They will lose access to the platform until reactivated.`,
-        confirmLabel: 'Suspend',
+        title: 'Disable Account',
+        message: `Suspend ${user.full_name}? They will be immediately locked out until reactivated.`,
+        confirmLabel: 'Disable',
         actionType: 'warning' as const,
       },
       activate: {
-        title: 'Activate Account',
-        message: `Are you sure you want to activate ${user.full_name}? They will regain full access to the platform.`,
-        confirmLabel: 'Activate',
+        title: 'Enable Account',
+        message: `Reactivate ${user.full_name}? They will regain full platform access.`,
+        confirmLabel: 'Enable',
         actionType: 'info' as const,
       },
       delete: {
         title: 'Delete Account',
-        message: `Are you sure you want to permanently delete ${user.full_name}? This action cannot be undone and all their data will be lost.`,
+        message: `Permanently delete ${user.full_name}? This action cannot be undone.`,
         confirmLabel: 'Delete',
         actionType: 'danger' as const,
       },
@@ -72,68 +70,57 @@ export default function AdminStudents() {
   const executeConfirmAction = async () => {
     if (!confirmAction) return;
     setConfirmLoading(true);
-
     try {
-      switch (confirmAction.type) {
-        case 'suspend':
-          await suspendUser(confirmAction.userId);
-          break;
-        case 'activate':
-          await activateUser(confirmAction.userId);
-          break;
-        case 'delete':
-          await deleteUser(confirmAction.userId);
-          break;
-      }
+      if (confirmAction.type === 'suspend') await suspendUser(confirmAction.userId);
+      else if (confirmAction.type === 'activate') await activateUser(confirmAction.userId);
+      else await deleteUser(confirmAction.userId);
       setConfirmAction(null);
-    } catch (err) {
-      console.error('Action failed:', err);
+    } catch {
+      // toast handled in hook
     } finally {
       setConfirmLoading(false);
     }
   };
 
-  // Loading state - show skeleton spinner
   if (loading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="animate-pulse space-y-6">
-          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-          <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          <div className="h-12 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          <div className="h-8 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          <div className="h-96 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg" style={{ background: 'rgba(56,189,248,0.15)' }}>
-            <GraduationCap size={28} style={{ color: '#38bdf8' }} />
+          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(56,189,248,0.15)' }}>
+            <GraduationCap size={26} style={{ color: '#38bdf8' }} />
           </div>
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text-main)' }}>
               Student Management
             </h1>
-            <p style={{ color: 'var(--text-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Manage student accounts and monitor enrollment
             </p>
           </div>
         </div>
-        
-        {/* Quick Stats */}
+
         <div className="flex gap-3">
           <div className="glass-card px-4 py-2 flex items-center gap-2">
-            <BarChart3 size={16} style={{ color: '#34d399' }} />
+            <BarChart3 size={15} style={{ color: '#34d399' }} />
             <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Active: <strong style={{ color: '#34d399' }}>{activeCount}</strong>
             </span>
           </div>
           <div className="glass-card px-4 py-2 flex items-center gap-2">
-            <BarChart3 size={16} style={{ color: '#fb7185' }} />
+            <BarChart3 size={15} style={{ color: '#fb7185' }} />
             <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Suspended: <strong style={{ color: '#fb7185' }}>{suspendedCount}</strong>
             </span>
@@ -141,8 +128,7 @@ export default function AdminStudents() {
         </div>
       </div>
 
-      {/* Filters - Role locked to student */}
-      <UserFilters 
+      <UserFilters
         search={filters.search || ''}
         role="student"
         status={filters.status || ''}
@@ -151,9 +137,8 @@ export default function AdminStudents() {
         onStatusChange={(v) => updateFilter('status', v || undefined)}
         onAddUser={() => setShowAddModal(true)}
       />
-      
-      {/* User Table */}
-      <UserTable 
+
+      <UserTable
         users={users}
         loading={loading}
         onEdit={handleEdit}
@@ -161,10 +146,9 @@ export default function AdminStudents() {
         onConfirmAction={handleConfirmAction}
       />
 
-      {/* Confirmation Modal */}
       {confirmAction && (
         <ConfirmModal
-          isOpen={true}
+          isOpen
           title={confirmAction.title}
           message={confirmAction.message}
           confirmText={confirmAction.confirmLabel}
@@ -176,47 +160,41 @@ export default function AdminStudents() {
         />
       )}
 
-      {/* Edit User Modal */}
       {editUser && (
         <EditUserModal
-          isOpen={true}
+          isOpen
           user={editUser}
           onClose={() => setEditUser(null)}
           onSave={() => { setEditUser(null); refresh(); }}
         />
       )}
 
-      {/* User Stats Modal */}
       {statsUser && (
-        <UserStats
-          user={statsUser}
-          onClose={() => setStatsUser(null)}
-        />
+        <UserStats user={statsUser} onClose={() => setStatsUser(null)} />
       )}
 
-      {/* Add User Modal */}
       {showAddModal && (
-        <AddUserModal 
+        <AddUserModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
           initialRole="student"
-          onSuccess={() => {
-            setShowAddModal(false);
-            refresh();
-            setSuccessMessage("Student created successfully!");
-            setTimeout(() => setSuccessMessage(null), 3000);
-          }}
+          onSuccess={() => { setShowAddModal(false); refresh(); }}
         />
       )}
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          <p className="font-medium">{successMessage}</p>
+      {/* Global Toast */}
+      {toast && (
+        <div
+          className="fixed bottom-4 right-4 z-[9999] px-5 py-3 rounded-xl shadow-2xl text-white text-sm font-medium flex items-center gap-2"
+          style={{
+            background: toast.type === 'success' ? 'rgba(5,150,105,0.95)' : 'rgba(190,18,60,0.95)',
+            border: `1px solid ${toast.type === 'success' ? '#059669' : '#be123c'}`,
+          }}
+        >
+          {toast.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+          {toast.message}
         </div>
       )}
-
-      {ToastComponent}
     </div>
   );
 }

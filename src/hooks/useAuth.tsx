@@ -66,32 +66,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                     const profile = await authService.getCurrentProfile();
                     if (mounted && profile) {
-                        // Check if account is suspended
+                        // Check if account is suspended at login time
                         if (profile.status === 'suspended') {
                             await supabase.auth.signOut();
                             setUser(null);
                             setLoading(false);
                             localStorage.removeItem('user_profile');
-                            throw new Error('Your account is suspended. Please contact admin.');
+                            return;
                         }
                         setUser(profile);
                         localStorage.setItem('user_profile', JSON.stringify(profile));
                     }
                 } catch (error) {
-                    console.error("Auth: Failed to fetch profile or account suspended", error);
-                    if (error instanceof Error && error.message.includes('suspended')) {
-                        // Re-throw for UI to handle
-                        throw error;
-                    }
+                    console.error("Auth: Failed to fetch profile", error);
                 } finally {
                     if (mounted) setLoading(false);
                 }
             }, 10);
         });
 
+        // Real-time subscription: auto-logout if admin suspends this user while logged in
+        let realtimeSub: ReturnType<typeof supabase.channel> | null = null;
+        const setupRealtimeWatch = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user?.id || !mounted) return;
+
+            const userId = session.user.id;
+            realtimeSub = supabase
+                .channel(`profile-status-${userId}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'profiles',
+                        filter: `id=eq.${userId}`,
+                    },
+                    async (payload) => {
+                        const newStatus = (payload.new as { status?: string }).status;
+                        if (newStatus === 'suspended' && mounted) {
+                            console.warn('Auth: Account suspended by admin — signing out.');
+                            await supabase.auth.signOut();
+                            setUser(null);
+                            localStorage.removeItem('user_profile');
+                        }
+                    }
+                )
+                .subscribe();
+        };
+        setupRealtimeWatch();
+
         return () => {
             mounted = false;
             subscription.unsubscribe();
+            if (realtimeSub) supabase.removeChannel(realtimeSub);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Empty dependency array is correct for auth listener

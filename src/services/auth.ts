@@ -2,7 +2,6 @@ import { supabase } from './supabase';
 import { UserProfile } from '../types';
 
 // Merges role-specific sub-table rows onto the flat UserProfile shape.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function flattenProfile(raw: any): UserProfile {
     const { student_profiles: spRaw, teacher_profiles: tpRaw, ...base } = raw;
     // Supabase may return one-to-one JOINs as arrays — normalise to single object

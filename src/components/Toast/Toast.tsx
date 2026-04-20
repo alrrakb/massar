@@ -42,7 +42,8 @@ export function Toast({ message, type, onClose, duration = 5000 }: ToastProps) {
   );
 }
 
-// Hook for using toasts
+// Hook for using toasts — co-located with Toast component intentionally
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 

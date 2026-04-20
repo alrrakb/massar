@@ -1,7 +1,8 @@
-import { Edit2, BarChart3, Trash2 } from 'lucide-react';
+import { Edit2, BarChart3, Trash2, ShieldOff, ShieldCheck } from 'lucide-react';
+import type { AdminUser } from '../types';
 
 interface Props {
-  users: any[];
+  users: AdminUser[];
   loading: boolean;
   onEdit: (id: string) => void;
   onStats: (id: string) => void;
@@ -11,10 +12,18 @@ interface Props {
 export default function UserTable({ users, loading, onEdit, onStats, onConfirmAction }: Props) {
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mx-auto mb-4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mx-auto"></div>
+      <div className="glass-card p-8">
+        <div className="animate-pulse space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-white/10" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-white/10 rounded w-1/3" />
+                <div className="h-3 bg-white/10 rounded w-1/4" />
+              </div>
+              <div className="h-6 w-20 bg-white/10 rounded-full" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -22,81 +31,163 @@ export default function UserTable({ users, loading, onEdit, onStats, onConfirmAc
 
   if (!users || users.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500 dark:text-gray-400">No users found</p>
+      <div className="glass-card p-12 text-center">
+        <p style={{ color: 'var(--text-muted)' }}>No users found matching your filters.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-900">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+    <div className="glass-card overflow-hidden">
+      <table className="min-w-full">
+        <thead>
+          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               User
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Role
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Status
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Joined
+            </th>
+            <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-          {users.map((user) => (
-            <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10">
-                    <img
-                      className="h-10 w-10 rounded-full"
-                      src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=3B82F6&color=fff`}
-                      alt={user.full_name}
-                    />
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+        <tbody>
+          {users.map((user, idx) => (
+            <tr
+              key={user.id}
+              style={{
+                borderBottom: idx < users.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                transition: 'background 0.15s',
+              }}
+              className="hover:bg-white/5"
+            >
+              {/* User Info */}
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-white/10"
+                    src={
+                      user.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=6366f1&color=fff&size=72`
+                    }
+                    alt={user.full_name}
+                  />
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: 'var(--text-main)' }}>
                       {user.full_name}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {user.email}
+                    </div>
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+
+              {/* Role */}
+              <td className="px-6 py-4">
                 <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    user.status === 'active'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                  }`}
+                  className="px-2.5 py-1 text-xs font-medium rounded-full capitalize"
+                  style={{
+                    background:
+                      user.role === 'teacher'
+                        ? 'rgba(167,139,250,0.15)'
+                        : user.role === 'admin'
+                        ? 'rgba(251,191,36,0.15)'
+                        : 'rgba(56,189,248,0.15)',
+                    color:
+                      user.role === 'teacher'
+                        ? '#a78bfa'
+                        : user.role === 'admin'
+                        ? '#fbbf24'
+                        : '#38bdf8',
+                  }}
+                >
+                  {user.role}
+                </span>
+              </td>
+
+              {/* Status */}
+              <td className="px-6 py-4">
+                <span
+                  className="px-2.5 py-1 text-xs font-semibold rounded-full capitalize"
+                  style={{
+                    background: user.status === 'active' ? 'rgba(52,211,153,0.15)' : 'rgba(251,113,133,0.15)',
+                    color: user.status === 'active' ? '#34d399' : '#fb7185',
+                  }}
                 >
                   {user.status}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="flex items-center justify-end gap-2">
+
+              {/* Joined */}
+              <td className="px-6 py-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {user.created_at
+                  ? new Date(user.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric', month: 'short', day: 'numeric',
+                    })
+                  : '—'}
+              </td>
+
+              {/* Actions */}
+              <td className="px-6 py-4">
+                <div className="flex items-center justify-end gap-1">
+                  {/* Edit */}
                   <button
                     onClick={() => onEdit(user.id)}
-                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                    title="Edit"
+                    title="Edit Profile"
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                    style={{ color: '#6366f1' }}
                   >
-                    <Edit2 size={18} />
+                    <Edit2 size={16} />
                   </button>
+
+                  {/* Stats */}
                   <button
                     onClick={() => onStats(user.id)}
-                    className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                    title="Stats"
+                    title="Account Stats"
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                    style={{ color: '#2dd4bf' }}
                   >
-                    <BarChart3 size={18} />
+                    <BarChart3 size={16} />
                   </button>
+
+                  {/* Suspend / Activate toggle */}
+                  {user.status === 'active' ? (
+                    <button
+                      onClick={() => onConfirmAction('suspend', user.id)}
+                      title="Disable Account"
+                      className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                      style={{ color: '#f59e0b' }}
+                    >
+                      <ShieldOff size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onConfirmAction('activate', user.id)}
+                      title="Enable Account"
+                      className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                      style={{ color: '#34d399' }}
+                    >
+                      <ShieldCheck size={16} />
+                    </button>
+                  )}
+
+                  {/* Delete */}
                   <button
                     onClick={() => onConfirmAction('delete', user.id)}
-                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                    title="Delete"
+                    title="Delete Account"
+                    className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
+                    style={{ color: '#fb7185' }}
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </td>
