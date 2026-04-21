@@ -207,6 +207,19 @@ export const adminApi = {
   },
 
   /**
+   * Upsert major_id / level_id in student_profiles
+   */
+  async updateStudentProfile(userId: string, data: { major_id?: number | null; level_id?: number | null }): Promise<void> {
+    const { error } = await serviceClient
+      .from('student_profiles')
+      .upsert({ id: userId, ...data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+
+    if (error) {
+      throw new Error(`Failed to update student profile: ${error.message}`);
+    }
+  },
+
+  /**
    * Get all majors
    */
   async getMajors(): Promise<any[]> {

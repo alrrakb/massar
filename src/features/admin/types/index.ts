@@ -44,11 +44,8 @@ export interface AdminUserPagination {
 
 export interface UpdateUserProfileInput {
   full_name?: string;
-  major?: string | null;
-  level?: string | null;
   specialization?: string | null;
   department?: string | null;
-  avatar_url?: string | null;
 }
 
 export interface UpdateUserStatusInput {

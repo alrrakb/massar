@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Loader2, Save } from 'lucide-react';
 import { adminApi } from '../api/adminApi';
-import type { AdminUser, UpdateUserProfileInput } from '../types';
+import { getSupabaseClient } from '../../../services/supabase';
+import type { AdminUser, UpdateUserProfileInput, Major, AcademicLevel } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -10,21 +11,68 @@ interface Props {
   onSave: () => void;
 }
 
+interface StudentExtra {
+  major_id: number | null;
+  level_id: number | null;
+}
+
+const inputStyle = {
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  color: 'var(--text-main)',
+} as const;
+
+const disabledStyle = {
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  color: 'var(--text-muted)',
+} as const;
+
 export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) {
   const [form, setForm] = useState<UpdateUserProfileInput>({
     full_name: user.full_name,
     department: user.department ?? '',
     specialization: user.specialization ?? '',
-    avatar_url: user.avatar_url ?? '',
   });
+  const [studentExtra, setStudentExtra] = useState<StudentExtra>({ major_id: null, level_id: null });
+  const [majors, setMajors] = useState<Major[]>([]);
+  const [levels, setLevels] = useState<AcademicLevel[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    if (user.role !== 'student') return;
+
+    const supabase = getSupabaseClient();
+
+    Promise.all([
+      adminApi.getMajors(),
+      adminApi.getAcademicLevels(),
+      supabase
+        .from('student_profiles')
+        .select('major_id, level_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]).then(([maj, lvl, { data: sp }]) => {
+      setMajors(maj as Major[]);
+      setLevels(lvl as AcademicLevel[]);
+      setStudentExtra({
+        major_id: sp?.major_id ?? null,
+        level_id: sp?.level_id ?? null,
+      });
+    });
+  }, [isOpen, user.id, user.role]);
+
   if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    if (name === 'major_id' || name === 'level_id') {
+      setStudentExtra(prev => ({ ...prev, [name]: value ? Number(value) : null }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
     if (error) setError(null);
   };
 
@@ -41,8 +89,15 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
         full_name: form.full_name.trim(),
         department: form.department || null,
         specialization: form.specialization || null,
-        avatar_url: form.avatar_url || null,
       });
+
+      if (user.role === 'student') {
+        await adminApi.updateStudentProfile(user.id, {
+          major_id: studentExtra.major_id,
+          level_id: studentExtra.level_id,
+        });
+      }
+
       onSave();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes.');
@@ -53,12 +108,13 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.65)' }}>
-      <div
-        className="glass-card w-full max-w-md shadow-2xl"
-        style={{ maxHeight: '90vh', overflowY: 'auto' }}
-      >
+      <div className="glass-card w-full max-w-md shadow-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div
+          className="flex items-center justify-between p-6"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        >
           <div>
             <h2 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>Edit Profile</h2>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
@@ -75,11 +131,15 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'rgba(251,113,133,0.12)', color: '#fb7185', border: '1px solid rgba(251,113,133,0.25)' }}>
+            <div
+              className="rounded-lg px-4 py-3 text-sm"
+              style={{ background: 'rgba(251,113,133,0.12)', color: '#fb7185', border: '1px solid rgba(251,113,133,0.25)' }}
+            >
               {error}
             </div>
           )}
 
+          {/* Full Name */}
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
               Full Name <span style={{ color: '#fb7185' }}>*</span>
@@ -91,15 +151,12 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
               onChange={handleChange}
               required
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'var(--text-main)',
-              }}
+              style={inputStyle}
               placeholder="Full name"
             />
           </div>
 
+          {/* Email (read-only) */}
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
               Email
@@ -108,15 +165,12 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
               type="email"
               value={user.email}
               disabled
-              className="w-full px-3 py-2.5 rounded-xl text-sm opacity-50 cursor-not-allowed"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: 'var(--text-muted)',
-              }}
+              className="w-full px-3 py-2.5 rounded-xl text-sm cursor-not-allowed"
+              style={disabledStyle}
             />
           </div>
 
+          {/* Teacher fields */}
           {user.role === 'teacher' && (
             <>
               <div>
@@ -129,11 +183,7 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
                   value={form.department ?? ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    color: 'var(--text-main)',
-                  }}
+                  style={inputStyle}
                   placeholder="e.g. Computer Science"
                 />
               </div>
@@ -147,35 +197,52 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
                   value={form.specialization ?? ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    color: 'var(--text-main)',
-                  }}
+                  style={inputStyle}
                   placeholder="e.g. Software Engineering"
                 />
               </div>
             </>
           )}
 
-          <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
-              Avatar URL
-            </label>
-            <input
-              type="url"
-              name="avatar_url"
-              value={form.avatar_url ?? ''}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                color: 'var(--text-main)',
-              }}
-              placeholder="https://..."
-            />
-          </div>
+          {/* Student fields: Major & Level */}
+          {user.role === 'student' && (
+            <>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  Major
+                </label>
+                <select
+                  name="major_id"
+                  value={studentExtra.major_id ?? ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={inputStyle}
+                >
+                  <option value="">— Select major —</option>
+                  {majors.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  Academic Level
+                </label>
+                <select
+                  name="level_id"
+                  value={studentExtra.level_id ?? ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={inputStyle}
+                >
+                  <option value="">— Select level —</option>
+                  {levels.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
