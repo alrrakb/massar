@@ -210,26 +210,8 @@ export default function AddUserModal({
             />
           </div>
 
-          {/* Role */}
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Role <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors"
-            >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-            </select>
-          </div>
+          {/* Role is determined by the page context — hidden from UI */}
+          <input type="hidden" name="role" value={formData.role} />
 
           {/* Student Fields */}
           {formData.role === "student" && (

@@ -32,11 +32,20 @@ export default function UserFilters({ search, role: _role, status, onSearchChang
       <select
         value={status}
         onChange={(e) => onStatusChange(e.target.value)}
-        className="btn-secondary py-2"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '12px',
+          color: 'white',
+          padding: '8px 14px',
+          outline: 'none',
+          cursor: 'pointer',
+          fontSize: '0.875rem',
+        }}
       >
-        <option value="">All Status</option>
-        <option value="active">Active</option>
-        <option value="suspended">Suspended</option>
+        <option value="" style={{ background: '#1e293b', color: 'white' }}>All Status</option>
+        <option value="active" style={{ background: '#1e293b', color: 'white' }}>Active</option>
+        <option value="suspended" style={{ background: '#1e293b', color: 'white' }}>Suspended</option>
       </select>
 
       <button onClick={onAddUser} className="btn-primary flex items-center gap-2">

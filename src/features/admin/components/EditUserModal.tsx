@@ -218,9 +218,9 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                   style={inputStyle}
                 >
-                  <option value="">— Select major —</option>
+                  <option value="" style={{ background: '#1e293b', color: 'white' }}>— Select major —</option>
                   {majors.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
+                    <option key={m.id} value={m.id} style={{ background: '#1e293b', color: 'white' }}>{m.name}</option>
                   ))}
                 </select>
               </div>
@@ -235,9 +235,9 @@ export default function EditUserModal({ isOpen, onClose, user, onSave }: Props) 
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
                   style={inputStyle}
                 >
-                  <option value="">— Select level —</option>
+                  <option value="" style={{ background: '#1e293b', color: 'white' }}>— Select level —</option>
                   {levels.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
+                    <option key={l.id} value={l.id} style={{ background: '#1e293b', color: 'white' }}>{l.name}</option>
                   ))}
                 </select>
               </div>
