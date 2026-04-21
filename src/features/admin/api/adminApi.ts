@@ -81,17 +81,21 @@ export const adminApi = {
    * Requires service-role for security
    */
   async updateUserStatus(userId: string, status: UserStatus): Promise<void> {
+    // 1. Update profiles table
     const { error } = await serviceClient
       .from('profiles')
-      .update({ 
-        status, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
     if (error) {
       throw new Error(`Failed to update user status: ${error.message}`);
     }
+
+    // 2. Mirror to Supabase Auth so the JWT is blocked at the auth layer.
+    //    ban_duration='876000h' (~100 years) = effectively permanent ban.
+    //    ban_duration='none' lifts the ban immediately.
+    const banDuration = status === 'suspended' ? '876000h' : 'none';
+    await serviceClient.auth.admin.updateUserById(userId, { ban_duration: banDuration });
   },
 
   /**

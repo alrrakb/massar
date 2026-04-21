@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         let mounted = true;
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             // FIX DEADLOCK: Push to macrotask queue to release Supabase's internal token lock
             // during TOKEN_REFRESHED events emitted by mfa.verify().
             setTimeout(async () => {
@@ -56,8 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     return;
                 }
 
-                // 3. Has Session & Verified -> Ensure Profile
-                if (user && user.id === session.user.id) {
+                // 3. Short-circuit only on token refreshes — NEVER on SIGNED_IN.
+                // A fresh login must always re-fetch from DB to catch suspended accounts.
+                if (event !== 'SIGNED_IN' && user && user.id === session.user.id) {
                     setLoading(false);
                     return;
                 }
