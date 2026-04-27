@@ -4,11 +4,17 @@
 // ============================================================
 
 import { getSupabaseClient, getServiceClient } from '../../../services/supabase';
+import { auditApi } from '../../admin-security/api/auditApi';
 import type { AdminUser, AdminUserFilters, AdminUserPagination, UpdateUserProfileInput, UserRole, UserStatus, CreateUserInput } from '../types';
 
 // Use singleton clients - no duplicate instances
 const anonClient = getSupabaseClient();
 const serviceClient = getServiceClient();
+
+async function currentAdminId(): Promise<string | null> {
+  const { data } = await anonClient.auth.getUser();
+  return data.user?.id ?? null;
+}
 
 export const adminApi = {
   /**
@@ -96,6 +102,13 @@ export const adminApi = {
     //    ban_duration='none' lifts the ban immediately.
     const banDuration = status === 'suspended' ? '876000h' : 'none';
     await serviceClient.auth.admin.updateUserById(userId, { ban_duration: banDuration });
+
+    void currentAdminId().then(adminId =>
+      auditApi.logAction(
+        adminId, status === 'suspended' ? 'suspend_user' : 'update_user',
+        'profiles', userId, null, { status },
+      )
+    );
   },
 
   /**
@@ -117,6 +130,13 @@ export const adminApi = {
       throw new Error(`Failed to update user profile: ${error.message}`);
     }
 
+    void currentAdminId().then(adminId =>
+      auditApi.logAction(
+        adminId, 'update_user', 'profiles', userId,
+        null, data as Record<string, unknown>,
+      )
+    );
+
     return data as AdminUser;
   },
 
@@ -131,6 +151,12 @@ export const adminApi = {
       throw new Error('Cannot delete your own account. Please contact system administrator.');
     }
 
+    const { data: oldProfile } = await serviceClient
+      .from('profiles')
+      .select('id, email, full_name, role, status')
+      .eq('id', userId)
+      .maybeSingle();
+
     const { error } = await serviceClient
       .from('profiles')
       .delete()
@@ -139,6 +165,13 @@ export const adminApi = {
     if (error) {
       throw new Error(`Failed to delete user: ${error.message}`);
     }
+
+    void currentAdminId().then(adminId =>
+      auditApi.logAction(
+        adminId, 'delete_user', 'profiles', userId,
+        oldProfile as Record<string, unknown> | null, null,
+      )
+    );
   },
 
   /**
@@ -273,7 +306,7 @@ export const adminApi = {
       department: input.department ?? null,
     }).eq('id', data.user.id);
 
-    return {
+    const newUser: AdminUser = {
       id: data.user.id,
       email: input.email,
       full_name: input.full_name,
@@ -283,5 +316,14 @@ export const adminApi = {
       created_at: data.user.created_at,
       updated_at: data.user.updated_at ?? data.user.created_at,
     };
+
+    void currentAdminId().then(adminId =>
+      auditApi.logAction(
+        adminId, 'create_user', 'profiles', newUser.id,
+        null, { id: newUser.id, email: newUser.email, full_name: newUser.full_name, role: newUser.role },
+      )
+    );
+
+    return newUser;
   },
 };
