@@ -1,0 +1,155 @@
+{
+  "page": {
+    "title": "الإشراف على المحتوى",
+    "subtitle": "إدارة اعتماد المقررات والتصنيفات وبلاغات المحتوى",
+    "refresh": "تحديث",
+    "refreshTitle": "تحديث التبويب الحالي"
+  },
+  "tabs": {
+    "approvals":  "اعتماد المقررات",
+    "exams":      "اعتماد الاختبارات",
+    "materials":  "اعتماد المواد",
+    "categories": "التصنيفات",
+    "reports":    "صندوق البلاغات"
+  },
+  "pending": {
+    "courses_one":        "{{count}} مقرر معلَّق",
+    "courses_other":      "{{count}} مقررات معلَّقة",
+    "exams_one":          "{{count}} اختبار معلَّق",
+    "exams_other":        "{{count}} اختبارات معلَّقة",
+    "materials_one":      "{{count}} مادة معلَّقة",
+    "materials_other":    "{{count}} مواد معلَّقة",
+    "openReports_one":    "{{count}} بلاغ مفتوح",
+    "openReports_other":  "{{count}} بلاغات مفتوحة"
+  },
+  "status": {
+    "pending":       "قيد المراجعة",
+    "approved":      "مقبول",
+    "rejected":      "مرفوض",
+    "pendingReview": "قيد المراجعة",
+    "open":          "مفتوح",
+    "resolved":      "تمت المعالجة"
+  },
+  "filter": {
+    "allStatuses": "كل الحالات",
+    "allReports":  "كل البلاغات"
+  },
+  "actions": {
+    "review":          "مراجعة",
+    "approve":         "قبول",
+    "reject":          "رفض",
+    "reReview":        "إعادة مراجعة",
+    "resolve":         "معالجة",
+    "cancel":          "إلغاء",
+    "saving":          "جاري الحفظ…",
+    "filing":          "جاري الإرسال…",
+    "fileReport":      "تقديم بلاغ",
+    "fileReportTitle": "تقديم بلاغ عن هذا المقرر",
+    "add":             "إضافة",
+    "delete":          "حذف",
+    "deleting":        "جاري الحذف…",
+    "edit":            "تعديل"
+  },
+  "table": {
+    "course":     "المقرر",
+    "teacher":    "الأستاذ",
+    "content":    "المحتوى",
+    "submitted":  "تاريخ الإرسال",
+    "status":     "الحالة",
+    "reviewedBy": "تمت المراجعة بواسطة",
+    "exam":       "الاختبار",
+    "course_col": "المقرر",
+    "questions":  "الأسئلة",
+    "material":   "المادة",
+    "type":       "النوع"
+  },
+  "counts": {
+    "materials_one":      "{{count}} مادة",
+    "materials_other":    "{{count}} مواد",
+    "exams_one":          "{{count}} اختبار",
+    "exams_other":        "{{count}} اختبارات",
+    "courseQueue_one":    "قائمة المقررات — {{count}} مقرر",
+    "courseQueue_other":  "قائمة المقررات — {{count}} مقررات",
+    "examQueue_one":      "قائمة الاختبارات — {{count}} اختبار",
+    "examQueue_other":    "قائمة الاختبارات — {{count}} اختبارات",
+    "materialQueue_one":  "قائمة المواد — {{count}} مادة",
+    "materialQueue_other":"قائمة المواد — {{count}} مواد",
+    "reportsTitle":       "بلاغات المحتوى — {{count}} إجمالاً"
+  },
+  "empty": {
+    "courses":   "لا توجد مقررات تطابق هذا الفلتر.",
+    "exams":     "لا توجد اختبارات تطابق هذا الفلتر.",
+    "materials": "لا توجد مواد تطابق هذا الفلتر.",
+    "reports":   "لا توجد بلاغات تطابق هذا الفلتر."
+  },
+  "review": {
+    "examSummary": "{{questions}} سؤال · {{duration}} دقيقة",
+    "notesLabel":              "ملاحظات المراجعة",
+    "notesRequired":           "(مطلوبة عند الرفض)",
+    "notesPlaceholder":        "أضف ملاحظاتك أو سبب الرفض...",
+    "rejectionRequired":       "سبب الرفض مطلوب.",
+    "rejectionRequiredCourse": "يجب إدخال سبب الرفض قبل رفض المقرر.",
+    "alreadyDecided":          "تم اتخاذ قرار بالفعل: {{status}}. يمكنك تغييره أدناه.",
+    "alreadyDecidedCourse":    "هذا المقرر {{status}} بالفعل. يمكنك تغيير القرار أدناه.",
+    "approvedLabel":           "مقبول",
+    "rejectedLabel":           "مرفوض",
+    "reviewedBy":              " بواسطة ",
+    "noCourse":                "لا يوجد مقرر",
+    "meta": {
+      "teacher":    "الأستاذ",
+      "course":     "المقرر",
+      "questions":  "الأسئلة",
+      "duration":   "المدة",
+      "submitted":  "تاريخ الإرسال",
+      "department": "القسم",
+      "credits":    "الساعات المعتمدة"
+    },
+    "noMaterials":      "لا توجد مواد مرفوعة.",
+    "noExams":          "لا توجد اختبارات منشأة.",
+    "description":      "الوصف",
+    "materialsSection": "المواد",
+    "examsSection":     "الاختبارات",
+    "report": {
+      "sectionTitle": "تقديم بلاغ",
+      "placeholder":  "صف المشكلة (20 حرفاً على الأقل)...",
+      "minChars":     "يرجى كتابة 20 حرفاً على الأقل.",
+      "failed":       "فشل إرسال البلاغ."
+    }
+  },
+  "taxonomy": {
+    "specialties": {
+      "title":        "التخصصات",
+      "subtitle":     "تصنيفات تخصصات المقررات",
+      "empty":        "لا توجد تخصصات بعد. أضف واحداً أعلاه.",
+      "saveFailed":   "فشل الحفظ. ربما الاسم موجود مسبقاً.",
+      "updateFailed": "فشل التحديث."
+    },
+    "levels": {
+      "title":        "المستويات الأكاديمية",
+      "subtitle":     "تصنيفات مستويات الطلاب",
+      "empty":        "لا توجد مستويات بعد. أضف واحداً أعلاه.",
+      "saveFailed":   "فشل الحفظ. ربما الاسم موجود مسبقاً.",
+      "updateFailed": "فشل التحديث.",
+      "orderBadge":   "الترتيب {{n}}"
+    },
+    "fields": {
+      "nameLabel":         "الاسم *",
+      "codeLabel":         "الرمز",
+      "orderLabel":        "ترتيب العرض",
+      "nameRequired":      "الاسم مطلوب",
+      "specialtyNamePh":   "مثال: هندسة البرمجيات",
+      "specialtyCodePh":   "مثال: SE",
+      "levelNamePh":       "مثال: السنة الثالثة",
+      "levelCodePh":       "مثال: L3",
+      "levelOrderPh":      "مثال: 3"
+    },
+    "delete": {
+      "title":            "حذف \"{{name}}\"؟",
+      "messageSpecialty": "سيتم حذف هذا التخصص نهائياً.",
+      "messageLevel":     "سيتم حذف هذا المستوى الأكاديمي نهائياً."
+    }
+  },
+  "reports": {
+    "unknownUser": "مستخدم غير معروف"
+  }
+}
